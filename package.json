@@ -1,0 +1,19 @@
+{
+  "name": "robots-check",
+  "version": "1.0.0",
+  "description": "See what your site's robots.txt actually serves -- including whether Cloudflare's AI Crawl Control is silently overriding it.",
+  "main": "robots-check.js",
+  "bin": {
+    "robots-check": "./robots-check.js"
+  },
+  "license": "MIT",
+  "author": "janibert1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/janibert1/robots-check"
+  },
+  "keywords": ["robots.txt", "seo", "cloudflare", "ai-crawl-control", "crawler", "cli"],
+  "engines": {
+    "node": ">=18"
+  }
+}
