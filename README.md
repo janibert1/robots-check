@@ -84,7 +84,7 @@ CDN-side change to what's served, not just a full block.
 Usable directly as a GitHub Action:
 
 ```yaml
-- uses: janibert1/robots-check@master
+- uses: janibert1/robots-check@v1
   with:
     domain: example.com
     fail-on-cloudflare-managed: 'false'  # optional, default false
