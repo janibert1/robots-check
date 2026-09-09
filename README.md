@@ -84,16 +84,21 @@ CDN-side change to what's served, not just a full block.
 Usable directly as a GitHub Action:
 
 ```yaml
-- uses: janibert1/robots-check@main
+- uses: janibert1/robots-check@master
   with:
     domain: example.com
     fail-on-cloudflare-managed: 'false'  # optional, default false
 ```
 
 Both CLI exit codes are verified locally against real live sites (a clean
-pass and a real `--fail-on-cloudflare-managed` failure). The `action.yml`
-wrapper itself hasn't yet been run inside a real GitHub Actions workflow —
-that's the next real verification step before promoting this beyond the CLI.
+pass and a real `--fail-on-cloudflare-managed` failure), **and the
+`action.yml` wrapper itself has been verified in a real GitHub Actions
+run** (`.github/workflows/self-test.yml`, triggered on every push to
+`master`): one job runs it against a known-clean domain and confirms it
+passes, a second runs it with `fail-on-cloudflare-managed: true` against
+a domain with a real Cloudflare-managed robots.txt rewrite and asserts
+the step actually failed. Both passed for real on 2026-09-09
+([run](https://github.com/janibert1/robots-check/actions)).
 
 ## What it doesn't do
 
