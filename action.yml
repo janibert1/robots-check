@@ -1,0 +1,25 @@
+name: 'robots-check'
+description: 'Fail a CI run if your live robots.txt is fully disallowing every crawler (or, optionally, whenever Cloudflare has silently modified it) — catches an accidental site-wide crawl block or an unexpected CDN-side robots.txt rewrite before it costs you real search visibility.'
+author: 'janibert1'
+branding:
+  icon: 'shield'
+  color: 'gray-dark'
+inputs:
+  domain:
+    description: 'Domain to check (e.g. example.com) — checks what is actually served at https://<domain>/robots.txt, not a local file.'
+    required: true
+  fail-on-cloudflare-managed:
+    description: 'Also fail the run whenever Cloudflare has injected its own managed block into robots.txt, not just on a full site-wide block.'
+    required: false
+    default: 'false'
+runs:
+  using: 'composite'
+  steps:
+    - name: Run robots-check
+      shell: bash
+      run: |
+        FLAGS="--ci"
+        if [ "${{ inputs.fail-on-cloudflare-managed }}" = "true" ]; then
+          FLAGS="$FLAGS --fail-on-cloudflare-managed"
+        fi
+        node "${{ github.action_path }}/robots-check.js" "${{ inputs.domain }}" $FLAGS

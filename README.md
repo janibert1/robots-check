@@ -66,6 +66,35 @@ AI training/crawling bots:
 Sitemap: https://example.com/sitemap.xml
 ```
 
+## CI mode / GitHub Action
+
+```bash
+node robots-check.js example.com --ci                          # exit 1 only if User-agent: * is fully disallowed
+node robots-check.js example.com --ci --fail-on-cloudflare-managed  # also exit 1 on any CDN-side rewrite
+```
+
+`--ci` catches the failure mode that actually matters for CI: an accidental
+site-wide crawl block (e.g. a staging-config `Disallow: /` that leaks into
+production, or a CDN/edge rule that blocks everything). It deliberately does
+**not** fail just because Cloudflare's AI Crawl Control is present — per the
+tool's own philosophy above, that's often intentional. Use
+`--fail-on-cloudflare-managed` if you specifically want CI to flag *any*
+CDN-side change to what's served, not just a full block.
+
+Usable directly as a GitHub Action:
+
+```yaml
+- uses: janibert1/robots-check@main
+  with:
+    domain: example.com
+    fail-on-cloudflare-managed: 'false'  # optional, default false
+```
+
+Both CLI exit codes are verified locally against real live sites (a clean
+pass and a real `--fail-on-cloudflare-managed` failure). The `action.yml`
+wrapper itself hasn't yet been run inside a real GitHub Actions workflow —
+that's the next real verification step before promoting this beyond the CLI.
+
 ## What it doesn't do
 
 It can't see your origin server's own `robots.txt` file directly — only

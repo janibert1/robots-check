@@ -89,11 +89,20 @@ function isBlocked(group) {
 }
 
 async function main() {
-  const domain = process.argv[2];
+  const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+  const flags = process.argv.slice(2).filter((a) => a.startsWith("--"));
+  const domain = args[0];
+  const ci = flags.includes("--ci");
+  const failOnCloudflareManaged = flags.includes("--fail-on-cloudflare-managed");
   if (!domain) {
     console.error(`${BOLD}robots-check${RESET} — see what your site's robots.txt actually serves\n`);
-    console.error(`Usage: npx github:janibert1/robots-check <domain>`);
-    console.error(`   or: node robots-check.js <domain>\n`);
+    console.error(`Usage: npx github:janibert1/robots-check <domain> [--ci] [--fail-on-cloudflare-managed]`);
+    console.error(`   or: node robots-check.js <domain> [--ci] [--fail-on-cloudflare-managed]\n`);
+    console.error(`${DIM}--ci: exit 1 if the site is fully disallowed for everyone (Disallow: / on User-agent: *)${RESET}`);
+    console.error(`${DIM}      -- catches an accidental "block all crawlers" left in by a CDN/edge config.${RESET}`);
+    console.error(`${DIM}--fail-on-cloudflare-managed: also exit 1 whenever Cloudflare has injected its own${RESET}`);
+    console.error(`${DIM}      managed block, for teams who want CI to flag ANY CDN-side robots.txt change,${RESET}`);
+    console.error(`${DIM}      not just an accidental full block.${RESET}\n`);
     process.exit(1);
   }
   const host = domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
@@ -161,6 +170,18 @@ async function main() {
 
   const totalGroups = Object.keys(groups).length;
   console.log(`${DIM}${totalGroups} user-agent group(s) parsed total. Run with the full domain (e.g. www.example.com) if a subdomain serves a different robots.txt.${RESET}`);
+
+  if (ci) {
+    if (starBlocked) {
+      console.log(`\n${RED}${BOLD}--ci: FAIL${RESET} — User-agent: * is fully disallowed. Every crawler (search engines included) is blocked site-wide.`);
+      process.exit(1);
+    }
+    if (failOnCloudflareManaged && isCloudflareManaged) {
+      console.log(`\n${RED}${BOLD}--ci: FAIL${RESET} — robots.txt is Cloudflare-managed and --fail-on-cloudflare-managed was set.`);
+      process.exit(1);
+    }
+    console.log(`\n${GREEN}--ci: PASS${RESET}`);
+  }
 }
 
 main();
