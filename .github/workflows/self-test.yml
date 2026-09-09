@@ -1,0 +1,35 @@
+name: Self-test action.yml
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  clean-pass:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: robots-check against a known-clean domain (should pass)
+        uses: ./
+        with:
+          domain: jdries.nl
+
+  expected-failure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: robots-check with --fail-on-cloudflare-managed against a known-managed domain (should fail)
+        id: check
+        continue-on-error: true
+        uses: ./
+        with:
+          domain: kvkcheck.jdries.nl
+          fail-on-cloudflare-managed: 'true'
+      - name: Assert it actually failed
+        run: |
+          if [ "${{ steps.check.outcome }}" != "failure" ]; then
+            echo "Expected the previous step to fail (kvkcheck.jdries.nl has a real Cloudflare-managed robots.txt block), but it reported '${{ steps.check.outcome }}'."
+            exit 1
+          fi
+          echo "Confirmed: action correctly failed on a domain with a real Cloudflare-managed robots.txt rewrite."
